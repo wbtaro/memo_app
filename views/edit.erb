@@ -1,0 +1,5 @@
+<form action="/<%= @memo.id %>" method="post">
+  <textarea name="content" class="is_textarea"><%= @memo.content %></textarea><br>
+  <input type="hidden" name="_method" value="PUT">
+  <input type="submit" value="変更" class="is_submit">
+</form>
