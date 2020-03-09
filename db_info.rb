@@ -1,8 +1,12 @@
 # frozen_string_literal: true
 
-module DbInfo
-  HOST = "13.78.57.122"
-  DATABASE = "postgres"
-  USER = "xxxxx"
-  PASSWORD = "xxxxx"
+class DbInfo
+  def self.connect_string
+    {
+      host: "13.78.57.122",
+      dbname: "postgres",
+      user: ENV["MEMOAPP_USER"],
+      password: ENV["MEMOAPP_PASS"]
+    }
+  end
 end
