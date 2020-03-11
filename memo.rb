@@ -1,58 +1,65 @@
 # frozen_string_literal: true
 
 require "securerandom"
+require "pg"
+require_relative "db_info"
 
 class Memo
-  MEMO_DIR = __dir__ + "/memo"
   attr_reader :title, :id, :content
-
   # メモ一覧を返却
   def self.list
     memo_list = []
-    id_list.each do |id|
-      File.open(MEMO_DIR + "/" + id) do |file|
-        # メモの1行目がタイトル代わり
-        memo_list << Memo.new(file.read.split("\n")[0], id)
+    conn = PG.connect DbInfo.connect_string
+    conn.exec("Select * from memo") do |result|
+      result.each do |row|
+        memo_list << Memo.new(row["text"].split("\n")[0], row["id"], row["text"])
       end
     end
+    conn.close
     memo_list
   end
 
   # メモの内容を読み取る
   def self.read(id)
-    File.open(MEMO_DIR + "/" + id) do |file|
-      content = file.read
-      Memo.new(content.split("\n")[0], id, content)
+    memo = ""
+    conn = PG.connect DbInfo.connect_string
+    conn.exec("Select * from memo where id='#{id}'") do |result|
+      result.each do |row|
+        memo = Memo.new(row["text"].split("\n")[0], row["id"], row["text"])
+      end
     end
+    conn.close
+    memo
   end
 
   # メモを新規作成
   def self.create(content)
-    File.open(MEMO_DIR + "/" + new_memo_id, "w") { |file| file.print content }
+    conn = PG.connect DbInfo.connect_string
+    conn.exec("Insert into  memo values ('#{new_memo_id}', '#{content}')")
+    conn.close
   end
 
   # メモを編集
   def self.edit(id, content)
-    File.open(MEMO_DIR + "/" + id, "w") { |file| file.print content }
+    conn = PG.connect DbInfo.connect_string
+    conn.exec("Update memo set text='#{content}' where id = '#{id}'")
+    conn.close
   end
 
   # メモを削除
   def self.delete(id)
-    File.delete(MEMO_DIR + "/" + id)
+    conn = PG.connect DbInfo.connect_string
+    conn.exec("Delete from memo where id = '#{id}'")
+    conn.close
   end
 
-  def initialize(title, file_name, content = "")
+  def initialize(title, id, content = "")
     @title = title
-    @id = file_name
+    @id = id
     @content = content
   end
 
   private
-    # メモファイルの一覧を返す
-    def self.id_list
-      Dir.children(MEMO_DIR)
-    end
-
     # 新規作成するメモのIDを決定
     def self.new_memo_id
       SecureRandom.uuid
