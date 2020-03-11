@@ -3,8 +3,8 @@
 class DbInfo
   def self.connect_string
     {
-      host: "13.78.57.122",
-      dbname: "postgres",
+      host: ENV["MEMOAPP_DBSERVER"],
+      dbname: ENV["MEMOAPP_DB"],
       user: ENV["MEMOAPP_USER"],
       password: ENV["MEMOAPP_PASS"]
     }
